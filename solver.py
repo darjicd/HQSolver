@@ -134,7 +134,7 @@ class Solver(object):
         if self.show_question or self.show_questionid:
             tempPrint = ""
             if self.show_question:
-                tempPrint += str(self.question["question"])
+                tempPrint += self.question["question"].encode( "UTF-8" ) 
             if self.show_question:
                 tempPrint += " (" + str(self.question["questionId"]) + ")"
             elif self.show_questionid:
