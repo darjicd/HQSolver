@@ -10,7 +10,7 @@ from twisted.internet import reactor, ssl
 
 from game import GameFactory
 import ssl
-
+# Used to fix an issue with urllib extraction #
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
@@ -68,17 +68,18 @@ class Launcher(object):
         main_urldata = main_urldata.replace("'", "")
         main_urldata = main_urldata.replace('\\n', '\n')
         responseJSON = json.loads(main_urldata)
-
-        if responseJSON["active"]:
-            print("Show is now live!".center(get_terminal_size()[0]))
-            return True
-        else:
-            print("Show isn't live!".center(get_terminal_size()[0]))
-            return False
+        try:
+            if responseJSON["active"]:
+                print("Show is now live!".center(get_terminal_size()[0]))
+                return True
+            else:
+                print("Show isn't live!".center(get_terminal_size()[0]))
+                return False
+        except:
+            print ("Server response failed. Please visit https://api-quiz.hype.space/shows/now?type= to validate your connection.")
 
     def getSocketURL(self):
 
-        request = requests.get(self.server_ip + self.api_shows, headers=login_header)
         main_url = "https://api-quiz.hype.space/shows/now?type="
         main_urldata = str(urllib.request.urlopen(main_url).read())
         main_urldata = main_urldata.replace("b'", "")
