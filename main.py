@@ -1,7 +1,7 @@
 import json
 import requests
 import sys
-
+import urllib
 from config import login_header, readFromConfig
 from shutil import get_terminal_size
 
@@ -9,7 +9,16 @@ from autobahn.twisted.websocket import connectWS
 from twisted.internet import reactor, ssl
 
 from game import GameFactory
-
+import ssl
+# Used to fix an issue with urllib extraction #
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    # Legacy Python that doesn't verify HTTPS certificates by default
+    pass
+else:
+    # Handle target environment that doesn't support HTTPS verification
+    ssl._create_default_https_context = _create_unverified_https_context
 
 class Launcher(object):
     def __init__(self):
@@ -53,11 +62,13 @@ class Launcher(object):
         """ Checks if show is live """
 
         request = requests.get(self.server_ip + self.api_shows, headers=login_header)
-        response = request.content.decode()
-
+        main_url = "https://api-quiz.hype.space/shows/now?type="
+        main_urldata = str(urllib.request.urlopen(main_url).read())
+        main_urldata = main_urldata.replace("b'", "")
+        main_urldata = main_urldata.replace("'", "")
+        main_urldata = main_urldata.replace('\\n', '\n')
+        responseJSON = json.loads(main_urldata)
         try:
-            responseJSON = json.loads(response)
-
             if responseJSON["active"]:
                 print("Show is now live!".center(get_terminal_size()[0]))
                 return True
@@ -65,16 +76,19 @@ class Launcher(object):
                 print("Show isn't live!".center(get_terminal_size()[0]))
                 return False
         except:
-            print("Server returned unknown response!".center(get_terminal_size()[0]))
-            return False
+            print ("Server response failed. Please visit https://api-quiz.hype.space/shows/now?type= to validate your connection.")
 
     def getSocketURL(self):
 
-        request = requests.get(self.server_ip + self.api_shows, headers=login_header)
-        response = request.content.decode()
+        main_url = "https://api-quiz.hype.space/shows/now?type="
+        main_urldata = str(urllib.request.urlopen(main_url).read())
+        main_urldata = main_urldata.replace("b'", "")
+        main_urldata = main_urldata.replace("'", "")
+        main_urldata = main_urldata.replace('\\n', '\n')
+        responseJSON = json.loads(main_urldata)
 
         try:
-            broadcastJSON = json.loads(response)["broadcast"]
+            broadcastJSON = json.loads(main_urldata)["broadcast"]
 
             socketURL = broadcastJSON["socketUrl"]
             return socketURL
